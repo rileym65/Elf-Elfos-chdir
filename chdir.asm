@@ -1,3 +1,6 @@
+.list
+.sym
+
 ; *******************************************************************
 ; *** This software is copyright 2004 by Michael H Riley          ***
 ; *** You have permission to use, modify, copy, and distribute    ***
@@ -8,6 +11,7 @@
 
 include    ../bios.inc
 include    ../kernel.inc
+include    ../../ops.inc
 
            org     8000h
            lbr     0ff00h
@@ -38,43 +42,27 @@ loop1:     lda     ra                  ; look for first less <= space
            dec     ra                  ; backup to char
            ldi     0                   ; need proper termination
            str     ra
-chdirgo:   ldi     high fildes         ; get file descriptor
-           phi     rd
-           ldi     low fildes
-           plo     rd
+chdirgo:   mov     rd,fildes
            ldn     rf                  ; get first byte of pathname
            lbz     view                ; jump if going to view dir
            ldi     0                   ; flags for open
-           sep     scall               ; attempt to change directory
-           dw      o_chdir
+           call    o_chdir
            bnf     opened              ; jump if file was opened
-           ldi     high errmsg         ; get error message
-           phi     rf
-           ldi     low errmsg
-           plo     rf
-           sep     scall               ; display it
-           dw      o_msg
-opened:    sep     sret                ; return to os
-view:      ldi     high dta            ; point to suitable buffer
-           phi     rf
-           ldi     low dta
-           plo     rf
+           mov     rf,errmsg
+           call    o_msg
+           ldi     8                   ; indicate invalid directory
+           sep     sret
+opened:    ldi     0
+           sep     sret                ; return to os
+view:      mov     rf,dta
            ldi     0
            str     rf                  ; place terminator
-           sep     scall               ; get current directory
-           dw      o_chdir
-           ldi     high dta            ; point to retrieved path
-           phi     rf
-           ldi     low dta
-           plo     rf
-           sep     scall               ; display it
-           dw      o_msg
-           ldi     high crlf           ; display a cr/lf
-           phi     rf
-           ldi     low crlf
-           plo     rf
-           sep     scall               ; display it
-           dw      o_msg
+           call    o_chdir
+           mov     rf,dta
+           call    o_msg
+           mov     rf,crlf
+           call    o_msg
+           ldi     0
            sep     sret                ; return to caller
 
 errmsg:    db      'Invalid Directory'
