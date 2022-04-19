@@ -1,12 +1,8 @@
 PROJECT = chdir
 
 $(PROJECT).prg: $(PROJECT).asm
-	../../dateextended.pl > date.inc
-	../../build.pl > build.inc
-	asm02 $(PROJECT).asm 2>&1 | tee $(PROJECT).lst
-	cat $(PROJECT).prg | sed -f adjust.sed > x.prg
-	rm $(PROJECT).prg
-	mv x.prg $(PROJECT).prg
+	asm02 -l -L $(PROJECT).asm
+	link02 -e $(PROJECT).prg -o $(PROJECT).bin
 
 hex: $(PROJECT).prg
 	cat $(PROJECT).prg | ../../tointel.pl > $(PROJECT).hex
